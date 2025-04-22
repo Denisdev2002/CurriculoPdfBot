@@ -1,0 +1,58 @@
+﻿# Build results
+bin/
+obj/
+
+# ASP.NET Core secrets
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.*.json
+
+# Visual Studio files
+.vscode/
+.vs/
+*.code-workspace
+
+# Logs
+*.log
+
+# Others
+*.db
+*.sqlite
+*.pdb
+*.mdb
+*.pidb
+*.cache
+*.pid
+*.ncb
+*.sdf
+*.suo
+
+# Rider (JetBrains)
+.idea/
+
+# Dotnet CLI
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+
+!appsettings.json
