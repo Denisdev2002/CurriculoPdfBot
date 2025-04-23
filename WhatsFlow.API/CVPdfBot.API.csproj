@@ -18,5 +18,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\WhatsFlow.Domain\CVPdfBot.Domain.csproj" />
+		<ProjectReference Include="..\WhatsFlow.Infra\CVPdfBot.Infra.csproj" />
 	</ItemGroup>
 </Project>

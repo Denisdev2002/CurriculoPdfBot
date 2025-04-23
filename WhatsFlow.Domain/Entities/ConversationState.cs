@@ -20,7 +20,7 @@
         public string? EducationLevel { get; set; }
         public int? GraduationYear { get; set; }
         // Experiência Profissional
-        public List<WorkExperience> WorkExperiences { get; set; }
+        public List<WorkExperience> WorkExperiences { get; set; } = new();
         // Habilidades
         public List<string> Skills { get; set; } = new();
         // Informações Adicionais

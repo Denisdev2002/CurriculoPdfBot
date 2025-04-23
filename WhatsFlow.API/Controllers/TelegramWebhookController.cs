@@ -22,5 +22,4 @@ namespace CVPdfBot.API.Controllers
             return Ok();
         }
     }
-
 }
