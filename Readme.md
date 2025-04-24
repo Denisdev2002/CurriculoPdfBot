@@ -37,6 +37,7 @@ Projeto criado com .NET 8 e a API do Telegram para construir currículos automat
 {
   "TelegramBotToken": "SEU_TOKEN_DO_TELEGRAM"
 }
+````
 
 3. Rode o projeto:
 dotnet run
