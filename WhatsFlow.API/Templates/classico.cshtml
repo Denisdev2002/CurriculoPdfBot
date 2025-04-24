@@ -1,0 +1,63 @@
+﻿@model CVPdfBot.Domain.Entities.ConversationState
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 14px;
+        }
+
+        h1 {
+            font-size: 22px;
+            border-bottom: 1px solid black;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>@Model.FullName</h1>
+    <p><strong>Nacionalidade:</strong> @Model.Nationality</p>
+    <p><strong>Estado civil:</strong> @Model.MaritalStatus</p>
+    <p><strong>Idade:</strong> @Model.Age</p>
+    <p><strong>Data de nascimento:</strong> @Model.DateOfBirth?.ToString("dd/MM/yyyy")</p>
+    <p><strong>Endereço:</strong> @Model.Address, @Model.City – @Model.State</p>
+    <p><strong>Contato:</strong> @Model.Phone / @Model.Email</p>
+
+    <h2>Objetivo</h2>
+    <p>@Model.ProfessionalObjective</p>
+
+    <h2>Formação Acadêmica</h2>
+    <p>@Model.EducationLevel - @Model.GraduationYear</p>
+
+    <h2>Experiência</h2>
+    @foreach (var exp in Model.WorkExperiences)
+    {
+    <p>
+        <strong>@exp.Company</strong><br />
+        @exp.Period - @exp.City/@exp.State<br />
+        <em>@exp.Role</em>: @string.Join(", ", exp.Responsibilities)
+    </p>
+    }
+
+    <h2>Habilidades</h2>
+    <ul>
+        @foreach (var skill in Model.Skills)
+        {
+        <li>@skill</li>
+        }
+    </ul>
+
+    <h2>Informações Adicionais</h2>
+    <ul>
+        @foreach (var info in Model.AdditionalInfo)
+        {
+        <li>@info</li>
+        }
+    </ul>
+</body>
+</html>

@@ -13,6 +13,7 @@
         public string? State { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
+        public DateTime LastInteraction { get; set; } = DateTime.UtcNow;
 
         // Objetivo
         public string? ProfessionalObjective { get; set; }

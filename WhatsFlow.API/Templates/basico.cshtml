@@ -1,0 +1,23 @@
+﻿@model CVPdfBot.Domain.Entities.ConversationState
+@Model.FullName
+@Model.Nationality, @Model.MaritalStatus, @Model.Age anos
+@Model.Address, @Model.City – @Model.State
+Tel: @Model.Phone | Email: @Model.Email
+
+Objetivo Profissional:
+@Model.ProfessionalObjective
+
+Formação:
+@Model.EducationLevel - @Model.GraduationYear
+
+Experiências:
+@foreach (var exp in Model.WorkExperiences)
+{
+@($"- {exp.Company}, {exp.Period}, {exp.City}/{exp.State}, {exp.Role}")
+}
+
+Habilidades:
+@string.Join(", ", Model.Skills)
+
+Informações adicionais:
+@string.Join(", ", Model.AdditionalInfo)

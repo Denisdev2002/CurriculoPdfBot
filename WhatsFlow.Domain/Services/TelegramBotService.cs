@@ -19,25 +19,27 @@ public class TelegramBotService
         _states = states;
 
         _steps = new()
-        {
-            HandleFullName,
-            HandleNationality,
-            HandleMaritalStatus,
-            HandleAge,
-            HandleBirth,
-            HandleAddress,
-            HandleCity,
-            HandleState,
-            HandlePhone,
-            HandleEmail,
-            HandleObjective,
-            HandleEducation,
-            HandleGraduationYear,
-            HandleExperience,
-            HandleSkills,
-            HandleAdditional,
-            HandleTemplateAndFinish
-        };
+{
+    HandleFullName,
+    HandleNationality,
+    HandleMaritalStatus,
+    HandleAge,
+    HandleBirth,
+    HandleAddress,
+    HandleCity,
+    HandleState,
+    HandlePhone,
+    HandleEmail,
+    HandleObjective,
+    HandleEducation,
+    HandleGraduationYear,
+    HandleExperience,
+    HandleSkills,
+    HandleAdditional,
+    AskTemplateChoice,          // 🔄 Novo método para perguntar
+    HandleTemplateAndFinish     // Agora realmente finaliza
+};
+
     }
 
     public async Task ProcessUpdateAsync(Update update)
@@ -48,11 +50,23 @@ public class TelegramBotService
         var chatId = update.Message.Chat.Id;
         var text = update.Message.Text.Trim();
 
+        // Novo: Verifica comandos
+        if (text.Equals("/start", StringComparison.OrdinalIgnoreCase) || text.Equals("/gerar", StringComparison.OrdinalIgnoreCase))
+        {
+            _states[chatId] = new ConversationState();
+            await _bot.SendMessage(chatId, "👋 Olá! Vamos começar seu currículo. Qual seu nome completo?");
+            return;
+        }
+
         if (!_states.TryGetValue(chatId, out var state))
         {
-            state = new ConversationState();
-            _states[chatId] = state;
+            await _bot.SendMessage(chatId, "❗ Envie /start para iniciar a criação do currículo.");
+            return;
         }
+
+        // Atualiza a última interação:
+        state.LastInteraction = DateTime.UtcNow;
+
 
         if (state.Step >= _steps.Count)
         {
@@ -62,6 +76,7 @@ public class TelegramBotService
 
         await _steps[state.Step].Invoke(chatId, text, state);
     }
+
 
     private async Task HandleFullName(long chatId, string text, ConversationState state)
     {
@@ -77,12 +92,12 @@ public class TelegramBotService
         }
     }
 
-    //Preciso arrumar aqui, porque ele pergunta duas vezes mesmo eu respondendo
+    //nPreciso arrumar aqui, porque ele pergunta duas vezes mesmo eu respondendo
     private async Task HandleNationality(long chatId, string text, ConversationState state)
     {
-        state.FullName = text;
+        state.Nationality = text;
         state.Step++;
-        await _bot.SendMessage(chatId, "📍 Qual sua nacionalidade?");
+        await _bot.SendMessage(chatId, "💍 Qual seu estado civil?");
     }
 
     private async Task HandleMaritalStatus(long chatId, string text, ConversationState state)
@@ -198,7 +213,7 @@ public class TelegramBotService
         }
 
         state.Step++;
-        await _bot.SendMessage(chatId, "📎 Agora, informe informações adicionais (separadas por ponto e vírgula):");
+        await _bot.SendMessage(chatId, "📎 Agora, informe as suas habillidades e conhecimentos técnicos (separadas por ponto e vírgula):");
     }
 
 
@@ -206,14 +221,27 @@ public class TelegramBotService
     {
         state.Skills = text.Split(';').Select(s => s.Trim()).ToList();
         state.Step++;
-        await _bot.SendMessage(chatId, "📌 Informações adicionais? (separe por ponto e vírgula)");
+        await _bot.SendMessage(chatId, "📌 Informações adicionais ? (separe por ponto e vírgula)");
     }
 
     private async Task HandleTemplateAndFinish(long chatId, string text, ConversationState state)
     {
-        state.AdditionalInfo = text.Split(';').Select(s => s.Trim()).ToList();
+        var escolha = text.Trim().ToLowerInvariant();
+
+        switch (escolha)
+        {
+            case "moderno":
+            case "classico":
+            case "básico":
+            case "basico":
+                state.Template = char.ToUpper(escolha[0]) + escolha[1..];
+                break;
+            default:
+                await _bot.SendMessage(chatId, "⚠️ Opção inválida. Por favor, digite: `Moderno`, `Clássico` ou `Básico`.");
+                return;
+        }
+
         state.Step++;
-        state.Template = "Moderno";
 
         var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
 
@@ -221,5 +249,20 @@ public class TelegramBotService
         await _bot.SendMessage(chatId, $"```\n{json}\n```", ParseMode.MarkdownV2);
 
         _states.Remove(chatId);
+    }
+
+    private async Task AskTemplateChoice(long chatId, string text, ConversationState state)
+    {
+        state.AdditionalInfo = text.Split(';').Select(s => s.Trim()).ToList();
+        state.Step++;
+
+        // Envia imagens ilustrativas se quiser
+        await _bot.SendMessage(chatId, "📸 Aqui estão os modelos disponíveis:");
+
+        await _bot.SendPhoto(chatId, InputFile.FromUri("https://example.com/template-moder.png"), "1️⃣ Moderno");
+        await _bot.SendPhoto(chatId, InputFile.FromUri("https://example.com/template-classico.png"), "2️⃣ Clássico");
+        await _bot.SendPhoto(chatId, InputFile.FromUri("https://example.com/template-basico.png"), "3️⃣ Básico");
+
+        await _bot.SendMessage(chatId, "🖼️ Qual modelo você deseja utilizar? Digite: `Moderno`, `Clássico` ou `Básico`");
     }
 }
