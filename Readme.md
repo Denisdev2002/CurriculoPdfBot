@@ -49,16 +49,17 @@ ngrok http 5020
 https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://<NGROK_URL>/api/telegram
 
 6. Inicie a conversa com o bot enviando /start
+   
 ---
+
 📸 Templates
 Os templates são exibidos via imagem antes da seleção final. Os arquivos .cshtml são usados como base e renderizados dinamicamente. Após seleção, o currículo é gerado com base no template escolhido.
 ---
+
 🤝 Contribuindo
 Sinta-se à vontade para abrir issues e enviar pull requests!
+
 ---
+
 📃 Licença
 Este projeto está licenciado sob a licença MIT.
-
-
-
-
