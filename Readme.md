@@ -73,18 +73,20 @@ No Linux, pode instalar via apt-get ou brew no macOS.
 
 No diretório do projeto, execute o Doxygen com o arquivo de configuração Doxyfile:
 
-	doxygen Doxyfile
 Após a execução, a documentação estará disponível no diretório C:/doxygen-curriculopdfbot (ou conforme configurado no Doxyfile).
 
 Abra o arquivo index.html no seu navegador para visualizar a documentação gerada.
 
-🤝 Contribuindo
+##🤝 Contribuindo
+
 Sinta-se à vontade para abrir issues e enviar pull requests!
 
-🤝 Contribuindo
+##  🤝 Contribuindo
+
 Sinta-se à vontade para abrir issues e enviar pull requests!
 
 ---
 
-📃 Licença
+## 📃 Licença
+
 Este projeto está licenciado sob a licença MIT.
