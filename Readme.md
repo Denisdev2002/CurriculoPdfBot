@@ -54,6 +54,7 @@ https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://<NGROK_URL>/api/t
 
 📸 Templates
 Os templates são exibidos via imagem antes da seleção final. Os arquivos .cshtml são usados como base e renderizados dinamicamente. Após seleção, o currículo é gerado com base no template escolhido.
+
 ---
 
 📄 Documentação do Código
