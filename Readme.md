@@ -77,7 +77,7 @@ Após a execução, a documentação estará disponível no diretório C:/doxyge
 
 Abra o arquivo index.html no seu navegador para visualizar a documentação gerada.
 
-##🤝 Contribuindo
+## 🤝 Contribuindo
 
 Sinta-se à vontade para abrir issues e enviar pull requests!
 
