@@ -37,6 +37,7 @@ Projeto criado com .NET 8 e a API do Telegram para construir currículos automat
 {
   "TelegramBotToken": "SEU_TOKEN_DO_TELEGRAM"
 }
+````
 
 3. Rode o projeto:
 dotnet run
@@ -48,9 +49,12 @@ ngrok http 5020
 https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://<NGROK_URL>/api/telegram
 
 6. Inicie a conversa com o bot enviando /start
+   
+---
 
 📸 Templates
 Os templates são exibidos via imagem antes da seleção final. Os arquivos .cshtml são usados como base e renderizados dinamicamente. Após seleção, o currículo é gerado com base no template escolhido.
+---
 
 📄 Documentação do Código
 A documentação do código é gerada automaticamente utilizando Doxygen. Para visualizar a documentação localmente, siga os passos abaixo:
@@ -76,6 +80,8 @@ Sinta-se à vontade para abrir issues e enviar pull requests!
 
 🤝 Contribuindo
 Sinta-se à vontade para abrir issues e enviar pull requests!
+
+---
 
 📃 Licença
 Este projeto está licenciado sob a licença MIT.
