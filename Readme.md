@@ -52,12 +52,30 @@ https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://<NGROK_URL>/api/t
 📸 Templates
 Os templates são exibidos via imagem antes da seleção final. Os arquivos .cshtml são usados como base e renderizados dinamicamente. Após seleção, o currículo é gerado com base no template escolhido.
 
+📄 Documentação do Código
+A documentação do código é gerada automaticamente utilizando Doxygen. Para visualizar a documentação localmente, siga os passos abaixo:
+
+Passos para gerar a documentação:
+Clone o repositório.
+
+Instale o Doxygen se ainda não tiver:
+
+No Windows, você pode instalar através do instalador.
+
+No Linux, pode instalar via apt-get ou brew no macOS.
+
+No diretório do projeto, execute o Doxygen com o arquivo de configuração Doxyfile:
+
+	doxygen Doxyfile
+Após a execução, a documentação estará disponível no diretório C:/doxygen-curriculopdfbot (ou conforme configurado no Doxyfile).
+
+Abra o arquivo index.html no seu navegador para visualizar a documentação gerada.
+
+🤝 Contribuindo
+Sinta-se à vontade para abrir issues e enviar pull requests!
+
 🤝 Contribuindo
 Sinta-se à vontade para abrir issues e enviar pull requests!
 
 📃 Licença
 Este projeto está licenciado sob a licença MIT.
-
-
-
-

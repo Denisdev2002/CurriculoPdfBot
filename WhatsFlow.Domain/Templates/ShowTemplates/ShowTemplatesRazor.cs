@@ -8,34 +8,6 @@ public class ShowTemplatesRazor
 {
     private readonly string _templateFolder = @"C:\WhatsFlowSolution\WhatsFlow.Domain\Templates";
 
-    public async Task RenderAndOpenAllTemplatesAsync()
-    {
-        var engine = new RazorLightEngineBuilder()
-            .UseEmbeddedResourcesProject(typeof(ShowTemplatesRazor)) 
-            .UseMemoryCachingProvider()
-            .Build();
-
-        var templates = new[] { "moderno", "classico", "basico" };
-
-        var exampleModel = GetSampleModel();
-
-        foreach (var template in templates)
-        {
-string templatePath = template;
-            string html = await engine.CompileRenderAsync(templatePath, exampleModel);
-
-            string outputPath = Path.Combine(_templateFolder, $"{template}.html");
-            await File.WriteAllTextAsync(outputPath, html);
-
-            // Abre no navegador
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = outputPath,
-                UseShellExecute = true
-            });
-        }
-    }
-
     private ConversationState GetSampleModel()
     {
         return new ConversationState
@@ -82,5 +54,4 @@ string templatePath = template;
 
         return await engine.CompileRenderAsync(templatePath, model);
     }
-
 }

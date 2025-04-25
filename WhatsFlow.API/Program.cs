@@ -1,4 +1,3 @@
-using CVPdfBot.API.GraphQL;
 using CVPdfBot.Domain.Entities;
 using CVPdfBot.Domain.Interfaces;
 using CVPdfBot.Domain.Services;
@@ -11,10 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSingleton<TelegramBotService>();
 builder.Services.AddSingleton<Dictionary<long, ConversationState>>();
-builder.Services
-    .AddSingleton<IConversationStateRepository, ConversationStateRepository>()
-    .AddGraphQLServer()
-    .AddQueryType<Query>();
 
 // Add services api
 builder.Services.AddSingleton<Dictionary<long, ConversationState>>();
