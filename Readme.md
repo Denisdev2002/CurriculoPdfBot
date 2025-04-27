@@ -43,6 +43,7 @@ Projeto criado com .NET 8 e a API do Telegram para construir currículos automat
 dotnet run
 
 4. Inicie o Ngrok (caso esteja em localhost):
+   
 ngrok http 5020
 
 ![Captura de Tela do Doxygen](print_doxygen.png)
