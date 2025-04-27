@@ -1,23 +1,52 @@
 ﻿@model CVPdfBot.Domain.Entities.ConversationState
-@Model.FullName
-@Model.Nationality, @Model.MaritalStatus, @Model.Age anos
-@Model.Address, @Model.City – @Model.State
-Tel: @Model.Phone | Email: @Model.Email
 
-Objetivo Profissional:
-@Model.ProfessionalObjective
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Currículo - Básico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            font-size: 14px;
+            color: #333;
+        }
 
-Formação:
-@Model.EducationLevel - @Model.GraduationYear
+        h1 {
+            font-size: 22px;
+            border-bottom: 1px solid #ccc;
+        }
 
-Experiências:
-@foreach (var exp in Model.WorkExperiences)
-{
-@($"- {exp.Company}, {exp.Period}, {exp.City}/{exp.State}, {exp.Role}")
-}
+        h2 {
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>@Model.FullName</h1>
+    <p>@Model.Nationality, @Model.MaritalStatus, @Model.Age anos</p>
+    <p>Endereço: @Model.Address, @Model.City – @Model.State</p>
+    <p>Telefone: @Model.Phone | Email: @Model.Email</p>
 
-Habilidades:
-@string.Join(", ", Model.Skills)
+    <h2>Objetivo Profissional</h2>
+    <p>@Model.ProfessionalObjective</p>
 
-Informações adicionais:
-@string.Join(", ", Model.AdditionalInfo)
+    <h2>Formação</h2>
+    <p>@Model.EducationLevel - Concluído em @Model.GraduationYear</p>
+
+    <h2>Experiência Profissional</h2>
+    @foreach (var exp in Model.WorkExperiences)
+    {
+        <p><strong>@exp.Company</strong> (@exp.Period)<br/>
+        @exp.City/@exp.State - <em>@exp.Role</em></p>
+    }
+
+    <h2>Habilidades</h2>
+    <p>@string.Join(", ", Model.Skills)</p>
+
+    <h2>Informações Adicionais</h2>
+    <p>@string.Join(", ", Model.AdditionalInfo)</p>
+</body>
+</html>

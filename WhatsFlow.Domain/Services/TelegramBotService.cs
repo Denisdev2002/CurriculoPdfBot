@@ -4,6 +4,9 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using System.Text.Json;
+using RazorLight;
+using System.Reflection;
+using TheArtOfDev.HtmlRenderer.PdfSharp;
 
 namespace CVPdfBot.Domain.Services;
 
@@ -20,7 +23,6 @@ public class TelegramBotService
 
         _steps = new()
 {
-    HandleFullName,
     HandleNationality,
     HandleMaritalStatus,
     HandleAge,
@@ -36,7 +38,7 @@ public class TelegramBotService
     HandleExperience,
     HandleSkills,
     HandleAdditional,
-    AskTemplateChoice,          // 🔄 Novo método para perguntar
+    AskTemplateChoice,          
     HandleTemplateAndFinish     // Agora realmente finaliza
 };
 
@@ -77,27 +79,12 @@ public class TelegramBotService
         await _steps[state.Step].Invoke(chatId, text, state);
     }
 
-
-    private async Task HandleFullName(long chatId, string text, ConversationState state)
-    {
-        if (!string.IsNullOrWhiteSpace(text))
-        {
-            state.FullName = text;
-            state.Step++;
-            await _bot.SendMessage(chatId, "📍 Qual sua nacionalidade?");
-        }
-        else
-        {
-            await _bot.SendMessage(chatId, "⚠️ Nome inválido. Por favor, digite novamente:");
-        }
-    }
-
     //nPreciso arrumar aqui, porque ele pergunta duas vezes mesmo eu respondendo
     private async Task HandleNationality(long chatId, string text, ConversationState state)
     {
         state.Nationality = text;
         state.Step++;
-        await _bot.SendMessage(chatId, "💍 Qual seu estado civil?");
+        await _bot.SendMessage(chatId, "🌎 Qual é a sua nacionalidade?");
     }
 
     private async Task HandleMaritalStatus(long chatId, string text, ConversationState state)
@@ -228,27 +215,97 @@ public class TelegramBotService
     {
         var escolha = text.Trim().ToLowerInvariant();
 
-        switch (escolha)
+        if (escolha == "moderno" || escolha == "classico" || escolha == "clássico" || escolha == "básico" || escolha == "basico")
         {
-            case "moderno":
-            case "classico":
-            case "básico":
-            case "basico":
-                state.Template = char.ToUpper(escolha[0]) + escolha[1..];
-                break;
-            default:
-                await _bot.SendMessage(chatId, "⚠️ Opção inválida. Por favor, digite: `Moderno`, `Clássico` ou `Básico`.");
-                return;
+            state.Template = char.ToUpper(escolha[0]) + escolha.Substring(1).ToLowerInvariant();
+            state.Step++;
+
+            // Geração do currículo em formato JSON (para visualização)
+            var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
+
+            // Envia o currículo em JSON para o usuário
+            await _bot.SendMessage(chatId, "📄 Currículo finalizado! Seus dados:");
+            await _bot.SendMessage(chatId, $"```\n{json}\n```", ParseMode.MarkdownV2);
+
+            // Geração do HTML com base no template Razor
+            var htmlContent = await GenerateHtmlFromRazor(state);
+
+            // Geração do PDF com o HTML renderizado
+            var pdfPath = await GeneratePdfFromHtml(htmlContent);
+
+            // Envia o PDF gerado para o usuário
+            await SendPdfToUser(chatId, pdfPath);
+
+            // Remove o estado do usuário após o envio
+            _states.Remove(chatId);
         }
+        else
+        {
+            await _bot.SendMessage(chatId, "⚠️ Opção inválida. Digite: `Moderno`, `Clássico` ou `Básico`.");
+        }
+    }
 
-        state.Step++;
+    private async Task<string> GenerateHtmlFromRazor(ConversationState state)
+    {
+        // Inicializa o RazorLight Engine
+        var engine = new RazorLightEngineBuilder()
+            .UseEmbeddedResourcesProject(Assembly.GetExecutingAssembly())  // Certifica-se de que está buscando os recursos incorporados
+            .UseMemoryCachingProvider()
+            .Build();
 
-        var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
+        // Caminho correto do template incorporado
+        var templatePath = "Templates.Curriculo.cshtml";  // O caminho deve ser com '.' ao invés de '/' para recursos incorporados
 
-        await _bot.SendMessage(chatId, "📄 Currículo finalizado! Aqui estão os dados que você forneceu:");
-        await _bot.SendMessage(chatId, $"```\n{json}\n```", ParseMode.MarkdownV2);
+        try
+        {
+            // Renderiza o HTML do template
+            var htmlContent = await engine.CompileRenderAsync(templatePath, state);
+            return htmlContent;
+        }
+        catch (Exception ex)
+        {
+            // Log para identificar erros
+            Console.WriteLine($"Erro ao gerar HTML do Razor: {ex.Message}");
+            throw;
+        }
+    }
 
-        _states.Remove(chatId);
+    private async Task<string> GeneratePdfFromHtml(string htmlContent)
+    {
+        // Cria o caminho completo para salvar o PDF
+        var pdfPath = Path.Combine(Directory.GetCurrentDirectory(), "curriculo_" + Guid.NewGuid().ToString() + ".pdf");
+
+        try
+        {
+            // Usando HtmlRenderer.PdfSharp para gerar o PDF a partir do HTML
+            var pdf = PdfGenerator.GeneratePdf(htmlContent, PdfSharp.PageSize.A4);
+
+            // Salva o PDF no disco
+            pdf.Save(pdfPath);
+            return pdfPath;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao gerar PDF: {ex.Message}");
+            throw;
+        }
+    }
+
+    private async Task SendPdfToUser(long chatId, string pdfPath)
+    {
+        try
+        {
+            // Envia o PDF gerado para o usuário
+            using (var stream = new FileStream(pdfPath, FileMode.Open, FileAccess.Read))
+            {
+                await _bot.SendDocument(chatId, new InputFileStream(stream), "Aqui está o seu currículo em PDF.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao enviar o PDF: {ex.Message}");
+            await _bot.SendMessage(chatId, "⚠️ Ocorreu um erro ao tentar enviar o seu currículo. Tente novamente.");
+        }
     }
 
     private async Task AskTemplateChoice(long chatId, string text, ConversationState state)
@@ -256,13 +313,13 @@ public class TelegramBotService
         state.AdditionalInfo = text.Split(';').Select(s => s.Trim()).ToList();
         state.Step++;
 
-        // Envia imagens ilustrativas se quiser
-        await _bot.SendMessage(chatId, "📸 Aqui estão os modelos disponíveis:");
+        await _bot.SendMessage(chatId, "📸 Olha só os modelos disponíveis para seu currículo:");
 
-        await _bot.SendPhoto(chatId, InputFile.FromUri("https://example.com/template-moder.png"), "1️⃣ Moderno");
-        await _bot.SendPhoto(chatId, InputFile.FromUri("https://example.com/template-classico.png"), "2️⃣ Clássico");
-        await _bot.SendPhoto(chatId, InputFile.FromUri("https://example.com/template-basico.png"), "3️⃣ Básico");
+        // Envia imagens ilustrativas
+        await _bot.SendPhoto(chatId, InputFile.FromUri("https://s.tmimgcdn.com/scr/1200x750/184500/layout-minimo-de-curriculo-com-barra-lateral-preta_184529-original.jpg"), "🖼️ 1️⃣ Modelo Moderno");
+        await _bot.SendPhoto(chatId, InputFile.FromUri("https://www.modelos-de-curriculos.com/wp-content/uploads/2020/01/67-modelo-curriculo-portugues.jpg"), "🖼️ 2️⃣ Modelo Clássico");
+        await _bot.SendPhoto(chatId, InputFile.FromUri("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTALZ702nL3l-OgdZB9kdjqANCQTWec4QEPmuvHAXY79Z6oJgk9dbBokaWsGgdanEyVIrM&usqp=CAU"), "🖼️ 3️⃣ Modelo Básico");
 
-        await _bot.SendMessage(chatId, "🖼️ Qual modelo você deseja utilizar? Digite: `Moderno`, `Clássico` ou `Básico`");
+        await _bot.SendMessage(chatId, "✍️ Agora, digite o modelo que deseja usar: `Moderno`, `Clássico` ou `Básico`");
     }
 }
