@@ -45,10 +45,13 @@ dotnet run
 4. Inicie o Ngrok (caso esteja em localhost):
 ngrok http 5020
 
-5. Registre o webhook:
+![Captura de Tela do Doxygen](images/doxygen_screenshot.png)
+_Este é o resultado gerado pelo Doxygen após rodar a documentação._
+
+6. Registre o webhook:
 https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://<NGROK_URL>/api/telegram
 
-6. Inicie a conversa com o bot enviando /start
+7. Inicie a conversa com o bot enviando /start
    
 ---
 
