@@ -55,4 +55,4 @@ $RECYCLE.BIN/
 .Trashes
 Icon?
 
-!appsettings.json
+**/appsettings.json
