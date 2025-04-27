@@ -45,7 +45,7 @@ dotnet run
 4. Inicie o Ngrok (caso esteja em localhost):
 ngrok http 5020
 
-![Captura de Tela do Doxygen](images/doxygen_screenshot.png)
+![Captura de Tela do Doxygen](print_doxygen.png)
 _Este é o resultado gerado pelo Doxygen após rodar a documentação._
 
 5. Registre o webhook:
