@@ -1,7 +1,6 @@
+using CVPdfBot.API.Services;
 using CVPdfBot.Domain.Entities;
-using CVPdfBot.Domain.Interfaces;
 using CVPdfBot.Domain.Services;
-using CVPdfBot.Infra.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,16 +1,15 @@
 ﻿using CVPdfBot.Domain.Entities;
-using Microsoft.Extensions.Configuration;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using System.Text.Json;
+using Wkhtmltopdf.NetCore;
+using CVPdfBot.Domain.Interfaces;
 using RazorLight;
-using System.Reflection;
-using TheArtOfDev.HtmlRenderer.PdfSharp;
+using RazorLight.Razor;
+using DinkToPdf;
 
-namespace CVPdfBot.Domain.Services;
+namespace CVPdfBot.API.Services;
 
-public class TelegramBotService
+public class TelegramBotService : ITelegramBotService
 {
     private readonly TelegramBotClient _bot;
     private readonly Dictionary<long, ConversationState> _states;
@@ -214,30 +213,57 @@ public class TelegramBotService
     private async Task HandleTemplateAndFinish(long chatId, string text, ConversationState state)
     {
         var escolha = text.Trim().ToLowerInvariant();
+        string templateName = null;
 
-        if (escolha == "moderno" || escolha == "classico" || escolha == "clássico" || escolha == "básico" || escolha == "basico")
+        if (escolha == "moderno") templateName = "Moderno";
+        else if (escolha == "classico" || escolha == "clássico") templateName = "Classico";
+        else if (escolha == "basico" || escolha == "básico") templateName = "Basico";
+
+        if (!string.IsNullOrEmpty(templateName))
         {
-            state.Template = char.ToUpper(escolha[0]) + escolha.Substring(1).ToLowerInvariant();
+            state.Template = templateName;
             state.Step++;
 
-            // Geração do currículo em formato JSON (para visualização)
-            var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine($"[HandleTemplateAndFinish] Template escolhido: {templateName}");
 
-            // Envia o currículo em JSON para o usuário
-            await _bot.SendMessage(chatId, "📄 Currículo finalizado! Seus dados:");
-            await _bot.SendMessage(chatId, $"```\n{json}\n```", ParseMode.MarkdownV2);
+            string htmlContent = null;
+            try
+            {
+                htmlContent = await GenerateHtmlFromRazor(state, templateName);
+                Console.WriteLine("[HandleTemplateAndFinish] HTML gerado com sucesso.");
+                // Console.WriteLine($"[HandleTemplateAndFinish] Conteúdo HTML: {htmlContent}"); // Descomente para logar o HTML (pode ser longo)
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[HandleTemplateAndFinish] Erro ao gerar HTML: {ex.Message}");
+                await _bot.SendMessage(chatId, $"⚠️ Erro ao gerar o currículo. Detalhes: {ex.Message}");
+                return;
+            }
 
-            // Geração do HTML com base no template Razor
-            var htmlContent = await GenerateHtmlFromRazor(state);
+            string pdfPath = null;
+            try
+            {
+                pdfPath = await GeneratePdfFromHtml(htmlContent);
+                Console.WriteLine($"[HandleTemplateAndFinish] PDF gerado com sucesso em: {pdfPath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[HandleTemplateAndFinish] Erro ao gerar PDF: {ex.Message}");
+                await _bot.SendMessage(chatId, $"⚠️ Erro ao gerar o PDF do currículo. Detalhes: {ex.Message}");
+                return;
+            }
 
-            // Geração do PDF com o HTML renderizado
-            var pdfPath = await GeneratePdfFromHtml(htmlContent);
-
-            // Envia o PDF gerado para o usuário
-            await SendPdfToUser(chatId, pdfPath);
-
-            // Remove o estado do usuário após o envio
-            _states.Remove(chatId);
+            try
+            {
+                await SendPdfToUser(chatId, pdfPath);
+                Console.WriteLine($"[HandleTemplateAndFinish] PDF enviado para o usuário.");
+                _states.Remove(chatId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[HandleTemplateAndFinish] Erro ao enviar o PDF: {ex.Message}");
+                await _bot.SendMessage(chatId, "⚠️ Ocorreu um erro ao tentar enviar o seu currículo em PDF. Tente novamente.");
+            }
         }
         else
         {
@@ -245,66 +271,116 @@ public class TelegramBotService
         }
     }
 
-    private async Task<string> GenerateHtmlFromRazor(ConversationState state)
+    private async Task<string> GenerateHtmlFromRazor(ConversationState state, string templateName)
     {
-        // Inicializa o RazorLight Engine
+        var templatesPath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "Templates");
+        var project = new FileSystemRazorProject(templatesPath);
+
         var engine = new RazorLightEngineBuilder()
-            .UseEmbeddedResourcesProject(Assembly.GetExecutingAssembly())  // Certifica-se de que está buscando os recursos incorporados
+            .UseProject(project)
             .UseMemoryCachingProvider()
             .Build();
 
-        // Caminho correto do template incorporado
-        var templatePath = "Templates.Curriculo.cshtml";  // O caminho deve ser com '.' ao invés de '/' para recursos incorporados
+        string templatePath = templateName.ToLowerInvariant() switch
+        {
+            "moderno" => "moderno.cshtml",
+            "classico" => "classico.cshtml",
+            "basico" => "basico.cshtml",
+            _ => throw new ArgumentException("Template desconhecido: " + templateName)
+        };
+
+        Console.WriteLine($"[GenerateHtmlFromRazor] Tentando renderizar o template: {templatePath}");
 
         try
         {
-            // Renderiza o HTML do template
             var htmlContent = await engine.CompileRenderAsync(templatePath, state);
+            Console.WriteLine("[GenerateHtmlFromRazor] Template renderizado com sucesso.");
             return htmlContent;
         }
         catch (Exception ex)
         {
-            // Log para identificar erros
-            Console.WriteLine($"Erro ao gerar HTML do Razor: {ex.Message}");
+            Console.WriteLine($"[GenerateHtmlFromRazor] Erro ao renderizar o template ({templatePath}): {ex.Message}");
             throw;
         }
     }
 
     private async Task<string> GeneratePdfFromHtml(string htmlContent)
     {
-        // Cria o caminho completo para salvar o PDF
-        var pdfPath = Path.Combine(Directory.GetCurrentDirectory(), "curriculo_" + Guid.NewGuid().ToString() + ".pdf");
+        var pdfPath = Path.Combine(Directory.GetCurrentDirectory(), $"curriculo_{Guid.NewGuid()}.pdf");
+        Console.WriteLine($"[GeneratePdfFromHtml] Tentando gerar PDF para: {pdfPath}");
 
         try
         {
-            // Usando HtmlRenderer.PdfSharp para gerar o PDF a partir do HTML
-            var pdf = PdfGenerator.GeneratePdf(htmlContent, PdfSharp.PageSize.A4);
+            var converter = new SynchronizedConverter(new PdfTools());
 
-            // Salva o PDF no disco
-            pdf.Save(pdfPath);
+            var doc = new HtmlToPdfDocument()
+            {
+                GlobalSettings = {
+                ColorMode = ColorMode.Color,
+                Orientation = Orientation.Portrait,
+                PaperSize = PaperKind.A4,
+                Out = pdfPath
+            },
+                Objects = {
+                new ObjectSettings() {
+                    HtmlContent = htmlContent,
+                    WebSettings = { DefaultEncoding = "utf-8" },
+                    HeaderSettings = { FontSize = 9, Right = "Página [page] de [toPage]", Line = true }
+                }
+            }
+            };
+
+            converter.Convert(doc);
+            Console.WriteLine($"[GeneratePdfFromHtml] PDF salvo com sucesso em: {pdfPath}");
+
             return pdfPath;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao gerar PDF: {ex.Message}");
+            Console.WriteLine($"[GeneratePdfFromHtml] Erro ao gerar PDF: {ex.Message}");
             throw;
         }
     }
 
+
     private async Task SendPdfToUser(long chatId, string pdfPath)
     {
+        Console.WriteLine($"[SendPdfToUser] Tentando enviar PDF do caminho: {pdfPath}");
+
         try
         {
-            // Envia o PDF gerado para o usuário
+            if (!File.Exists(pdfPath))
+            {
+                Console.WriteLine($"[SendPdfToUser] Arquivo PDF não encontrado em: {pdfPath}");
+                await _bot.SendMessage(chatId, "⚠️ Erro: Arquivo do currículo não encontrado. Tente novamente.");
+                return;
+            }
+
             using (var stream = new FileStream(pdfPath, FileMode.Open, FileAccess.Read))
             {
-                await _bot.SendDocument(chatId, new InputFileStream(stream), "Aqui está o seu currículo em PDF.");
+                Console.WriteLine("[SendPdfToUser] Stream do arquivo PDF aberto.");
+                await _bot.SendDocument(
+                    chatId: chatId,
+                    document: new InputFileStream(stream, $"currículo_{DateTime.Now:yyyyMMdd_HHmmss}.pdf"),
+                    caption: "✅ Aqui está o seu currículo em PDF!"
+                );
+                Console.WriteLine("[SendPdfToUser] PDF enviado com sucesso para o usuário.");
+            }
+
+            try
+            {
+                File.Delete(pdfPath);
+                Console.WriteLine($"[SendPdfToUser] Arquivo PDF deletado: {pdfPath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SendPdfToUser] Erro ao deletar o arquivo PDF: {ex.Message}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao enviar o PDF: {ex.Message}");
-            await _bot.SendMessage(chatId, "⚠️ Ocorreu um erro ao tentar enviar o seu currículo. Tente novamente.");
+            Console.WriteLine($"[SendPdfToUser] Erro ao enviar o PDF: {ex.Message}");
+            await _bot.SendMessage(chatId, "⚠️ Ocorreu um erro ao tentar enviar o seu currículo em PDF. Tente novamente.");
         }
     }
 
@@ -312,7 +388,7 @@ public class TelegramBotService
     {
         state.AdditionalInfo = text.Split(';').Select(s => s.Trim()).ToList();
         state.Step++;
-
+            
         await _bot.SendMessage(chatId, "📸 Olha só os modelos disponíveis para seu currículo:");
 
         // Envia imagens ilustrativas

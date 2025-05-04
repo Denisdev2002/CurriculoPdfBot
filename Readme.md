@@ -11,7 +11,7 @@ Projeto criado com .NET 8 e a API do Telegram para construir currículos automat
 - Armazenamento em memória do estado da conversa (`ConversationState`)
 - Geração de currículo em **3 estilos de template (Moderno, Clássico, Básico)**
 - Visualização das opções de template por imagens
-- Geração de currículo final em **PDF** usando Razor + DinkToPdf *(em andamento)*
+- Geração de currículo final em PDF usando RazorLight + DinkToPdf
 - Encerramento automático de sessões inativas após 5 minutos
 
 ---
@@ -80,10 +80,6 @@ No diretório do projeto, execute o Doxygen com o arquivo de configuração Doxy
 Após a execução, a documentação estará disponível no diretório C:/doxygen-curriculopdfbot (ou conforme configurado no Doxyfile).
 
 Abra o arquivo index.html no seu navegador para visualizar a documentação gerada.
-
-## 🤝 Contribuindo
-
-Sinta-se à vontade para abrir issues e enviar pull requests!
 
 ##  🤝 Contribuindo
 

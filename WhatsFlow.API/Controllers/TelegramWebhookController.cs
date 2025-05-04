@@ -1,4 +1,5 @@
-﻿using CVPdfBot.Domain.Services;
+﻿using CVPdfBot.API.Services;
+using CVPdfBot.Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types;
 
@@ -32,8 +33,17 @@ namespace CVPdfBot.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Update update)
         {
-            await _botService.ProcessUpdateAsync(update);
-            return Ok();
+            try
+            {
+                await _botService.ProcessUpdateAsync(update);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao processar update do Telegram: {ex.Message}");
+                return StatusCode(500, "Erro ao processar a atualização do Telegram.");
+            }
         }
+
     }
 }

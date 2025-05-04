@@ -5,26 +5,25 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<PreserveCompilationContext>true</PreserveCompilationContext>
+		<EnableDefaultContentItems>false</EnableDefaultContentItems>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Templates\*.cshtml" />
+		<Content Include="Templates\*.cshtml">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="DinkToPdf" Version="1.0.8" />
 		<PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.3.0" />
 		<PackageReference Include="RazorLight" Version="2.3.1" />
-		<PackageReference Include="HotChocolate.AspNetCore" Version="15.1.3" />
-		<PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.3" />
-		<PackageReference Include="HotChocolate.Data" Version="15.1.3" />
-		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.11.2" />
-		<PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.11.2" />
 		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+		<PackageReference Include="Wkhtmltopdf.NetCore" Version="3.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\WhatsFlow.Domain\CVPdfBot.Domain.csproj" />
-		<ProjectReference Include="..\WhatsFlow.Infra\CVPdfBot.Infra.csproj" />
 	</ItemGroup>
 </Project>
